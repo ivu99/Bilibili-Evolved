@@ -1,6 +1,4 @@
-import {
-  Executable, TestPattern, VueModule, WithName,
-} from '@/core/common-types'
+import { Executable, TestPattern, VueModule, WithName } from '@/core/common-types'
 import { DownloadPackage, PackageEntry } from '@/core/download'
 import { formatNumber } from '@/core/utils/formatters'
 import { getFriendlyTitle } from '@/core/utils/title'
@@ -23,7 +21,13 @@ export interface DownloadVideoInputItem {
 }
 /** 页面数据提供者 */
 export interface DownloadVideoInput<InputParameter = any> extends VueInstanceInput, WithName {
+  /** 获取用户选择的所有视频输入数据 */
   getInputs: (componentInstance: InputParameter) => Promise<DownloadVideoInputItem[]>
+  /** 获取测试用的视频输入数据 (用于拉取清晰度列表等) */
+  getTestInput?: () => DownloadVideoInputItem | null
+  /** 是否是批量源 */
+  batch?: boolean
+  /** 网址匹配规则 */
   match?: TestPattern
 }
 /** 表示一个视频分段 */
@@ -41,7 +45,9 @@ export class DownloadVideoInfo {
   public qualities: VideoQuality[]
   public currentQuality: VideoQuality
   public jsonData: any
-  constructor(parameters: Omit<DownloadVideoInfo, 'totalSize' | 'totalLength' | 'titledFragments'>) {
+  constructor(
+    parameters: Omit<DownloadVideoInfo, 'totalSize' | 'totalLength' | 'titledFragments'>,
+  ) {
     Object.assign(this, parameters)
   }
   get totalSize() {
@@ -52,9 +58,8 @@ export class DownloadVideoInfo {
   }
   get titledFragments() {
     return this.fragments.map((fragment, index) => {
-      const hasSameExtension = this.fragments
-        .filter(f => f.extension === fragment.extension)
-        .length > 1
+      const hasSameExtension =
+        this.fragments.filter(f => f.extension === fragment.extension).length > 1
       const filenameSuffix = hasSameExtension
         ? ` - ${formatNumber(index + 1, this.fragments.length)}`
         : ''
@@ -66,6 +71,8 @@ export class DownloadVideoInfo {
 export interface DownloadVideoApi extends WithName {
   downloadVideoInfo: (input: DownloadVideoInputItem) => Promise<DownloadVideoInfo>
   description?: string
+  /** 网址匹配规则 */
+  match?: TestPattern
 }
 /** 表示下载时额外附带的产物, 如弹幕 / 字幕等 */
 export interface DownloadVideoAssets<AssetsParameter = any> extends VueInstanceInput, WithName {
@@ -76,9 +83,7 @@ export class DownloadVideoAction {
   readonly inputs: DownloadVideoInputItem[] = []
   extraAssets: PackageEntry[] = []
 
-  constructor(
-    public infos: DownloadVideoInfo[],
-  ) {
+  constructor(public infos: DownloadVideoInfo[]) {
     this.inputs = infos.map(it => it.input)
   }
   get isSingleVideo() {

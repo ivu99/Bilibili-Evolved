@@ -1,8 +1,12 @@
+/* ⚠ Ajax Hook API 已废弃, 请勿使用 */
+
 import { PluginMetadata } from '../plugin'
 
 // https://github.com/the1812/Bilibili-Evolved/issues/84
 let ajaxHooked = false
 const handlerMap: Map<string, ((...args: any[]) => void)[]> = new Map()
+
+/** @deprecated ⚠ Ajax Hook API 已废弃, 请勿使用 */
 export const getHandlers = (name: string) => {
   const lowercase = name.toLowerCase()
   let handlers = handlerMap.get(lowercase)
@@ -21,9 +25,8 @@ const setupAjaxHook = () => {
     open: XMLHttpRequest.prototype.open,
     send: XMLHttpRequest.prototype.send,
   }
-  const fireHandlers = (name: string, thisArg: any, ...args: any[]) => (
+  const fireHandlers = (name: string, thisArg: any, ...args: any[]) =>
     getHandlers(name).forEach(it => it.call(thisArg, ...args))
-  )
   const hook = (name: string, thisArgs: any, ...args: any[]) => {
     fireHandlers(`before${name}`, thisArgs, ...args)
     const returnValue = original[name].call(thisArgs, ...args)
